@@ -4,7 +4,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
+
+import com.sso.utils.Log;
 
 import com.sso.activity.MainActivity;
 import com.sso.service.ForceOfflineService;
@@ -39,6 +40,9 @@ public class MyReceiver extends BroadcastReceiver {
                         
         } else if (JPushInterface.ACTION_MESSAGE_RECEIVED.equals(intent.getAction())) {
         	Log.d(TAG, "[MyReceiver] 接收到推送下来的自定义消息: " + bundle.getString(JPushInterface.EXTRA_MESSAGE));
+			if ("下线".equals(bundle.getString(JPushInterface.EXTRA_MESSAGE))) {
+				context.getApplicationContext().startService(new Intent(context.getApplicationContext(), ForceOfflineService.class));
+			}
         	processCustomMessage(context, bundle);
         
         } else if (JPushInterface.ACTION_NOTIFICATION_RECEIVED.equals(intent.getAction())) {
@@ -62,7 +66,7 @@ public class MyReceiver extends BroadcastReceiver {
         	
         } else if(JPushInterface.ACTION_CONNECTION_CHANGE.equals(intent.getAction())) {
         	boolean connected = intent.getBooleanExtra(JPushInterface.EXTRA_CONNECTION_CHANGE, false);
-        	Log.w(TAG, "[MyReceiver]" + intent.getAction() +" connected state change to "+connected);
+        	Log.d(TAG, "[MyReceiver]" + intent.getAction() +" connected state change to "+connected);
         } else {
         	Log.d(TAG, "[MyReceiver] Unhandled intent - " + intent.getAction());
         }
@@ -104,7 +108,7 @@ public class MyReceiver extends BroadcastReceiver {
 	
 	//send msg to MainActivity
 	private void processCustomMessage(Context context, Bundle bundle) {
-		String message;
+		final String message;
 		if (MainActivity.isForeground) {
 			message = bundle.getString(JPushInterface.EXTRA_MESSAGE);
 			String extras = bundle.getString(JPushInterface.EXTRA_EXTRA);
@@ -120,9 +124,6 @@ public class MyReceiver extends BroadcastReceiver {
 
 				}
 
-			}
-			if ("下线".equals(message)) {
-				context.getApplicationContext().startService(new Intent(context.getApplicationContext(), ForceOfflineService.class));
 			}
 			context.sendBroadcast(msgIntent);
 		}
